@@ -25,21 +25,43 @@ namespace weaponspeedmultFix {
     }
 
     void hkbHook::Install() { 
-        log::info("[hkbHook]: attempt to install hooks");
+        log::info("[hkbHook]: attempting to install hooks");
         REL::Relocation<std::uintptr_t> vtblhkbClipGenerator{RE::VTABLE_hkbClipGenerator[0]};
-        _originalActivate = vtblhkbClipGenerator.write_vfunc(0x4, Activate);
-        log::info("[hkbHook]: installed Activate hook at slot 0x4");
+        /*_originalActivate = vtblhkbClipGenerator.write_vfunc(0x4, Activate);
+        log::info("[hkbHook]: installed Activate hook at slot 0x4");*/
+
+        _originalUpdate = vtblhkbClipGenerator.write_vfunc(0x05, &hkbHook::Update);
+        log::info("[hkbHook]: installed Update hook at slot 0x5");
+
     }
 
     void hkbHook::Activate(RE::hkbClipGenerator* self, const RE::hkbContext& a_context) {
-        if (self) {
-            const char* name = self->animationName.c_str();
-            /*log::info("[hkbClipGenerator::Activate] clip='{}' speed={}", name ? name : "<null>", self->playbackSpeed);*/
-            if (IsMCOAttackClip(name)) {
-                log::info("[hkbClipGenerator::Activate] clip='{}' speed={}", name ? name : "<null>",
-                          self->playbackSpeed);
-            }
+        if (!self) {
+            log::warn("[hkbHook::Activate]: no self");
+            return;
         }
         _originalActivate(self, a_context);
+
+        const char* name = self->animationName.c_str();
+        /*log::info("[hkbClipGenerator::Activate] clip='{}' speed={}", name ? name : "<null>", self->playbackSpeed);*/
+        if (IsMCOAttackClip(name)) {
+            log::info("[hkbHook::Activate] clip='{}' speed={}", name ? name : "<null>",
+                        self->playbackSpeed);
+        }   
+    }
+
+    void hkbHook::Update(RE::hkbClipGenerator* self, const RE::hkbContext& a_context, float a_timestep) {
+        _originalUpdate(self, a_context, a_timestep);
+        if (!self) {
+            log::warn("[hkbHook::Update]: no self");
+            return;
+        }
+        //fetch anim name
+        const char* raw = self->animationName.c_str();
+        if (!raw || !IsMCOAttackClip(raw)) {
+            return;
+        }
+        log::info("[hkbHook::Update] clip='{}' speed={}", raw ? raw : "<null>", self->playbackSpeed);
+        return;
     }
 }
