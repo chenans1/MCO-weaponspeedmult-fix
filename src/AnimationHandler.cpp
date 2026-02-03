@@ -8,36 +8,36 @@ using namespace SKSE::log;
 using namespace SKSE::stl;
 
 namespace weaponspeedmultFix {
-    static bool IsBFCOAttackClip(std::string_view clipPath) noexcept {
-        const auto file = utils::basename_view(clipPath);
-        /*static constexpr std::array<std::string_view, 9> kPrefixes = {
-            "BFCO_attack", "BFCO_powerattack", 
-            "BFCO_SpecialAttack", "BFCO_SpecialAttackPower", 
-            "BFCO_RangeAttack", 
-            "BFCO_SprintAttackPower","BFCO_SprintAttack",
-            "BFCO_JumpAttack","BFCO_JumpAttackPower"};
-        
-        for (auto p : kPrefixes) {
-            if (utils::istarts_with(file, p)) return true;
-        }
-        return false;*/
-        if (!utils::istarts_with(file, "BFCO_")) {
-            return false;
-        }
-        return true;
-        
-    }
+    //static bool IsBFCOAttackClip(std::string_view clipPath) noexcept {
+    //    const auto file = utils::basename_view(clipPath);
+    //    /*static constexpr std::array<std::string_view, 9> kPrefixes = {
+    //        "BFCO_attack", "BFCO_powerattack", 
+    //        "BFCO_SpecialAttack", "BFCO_SpecialAttackPower", 
+    //        "BFCO_RangeAttack", 
+    //        "BFCO_SprintAttackPower","BFCO_SprintAttack",
+    //        "BFCO_JumpAttack","BFCO_JumpAttackPower"};
+    //    
+    //    for (auto p : kPrefixes) {
+    //        if (utils::istarts_with(file, p)) return true;
+    //    }
+    //    return false;*/
+    //    if (!utils::istarts_with(file, "BFCO_")) {
+    //        return false;
+    //    }
+    //    return true;
+    //    
+    //}
 
-    static bool IsMCOAttackClip(std::string_view clipPath) noexcept {
-        static constexpr std::array<std::string_view, 5> kPrefixes = {
-            "MCO_attack", "MCO_powerattack", "MCO_sprintattack", "MCO_sprintpowerattack", "MCO_weaponart"};
+    //static bool IsMCOAttackClip(std::string_view clipPath) noexcept {
+    //    static constexpr std::array<std::string_view, 5> kPrefixes = {
+    //        "MCO_attack", "MCO_powerattack", "MCO_sprintattack", "MCO_sprintpowerattack", "MCO_weaponart"};
 
-        const auto file = utils::basename_view(clipPath);
-        for (auto p : kPrefixes) {
-            if (utils::istarts_with(file, p)) return true;
-        }
-        return false;
-    }
+    //    const auto file = utils::basename_view(clipPath);
+    //    for (auto p : kPrefixes) {
+    //        if (utils::istarts_with(file, p)) return true;
+    //    }
+    //    return false;
+    //}
 
     //handles both either MCO or BFCO
     static bool IsTargetClip(std::string_view clipPath) noexcept {
@@ -53,7 +53,7 @@ namespace weaponspeedmultFix {
         return false;
     }
 
-    //test from asrak's magicutils: -0xC0 pointer offset
+    //from asrak's magicutils: -0xC0 pointer offset
     [[nodiscard]] inline RE::BShkbAnimationGraph* GraphFromCharacter(RE::hkbCharacter* chr) noexcept {
         if (!chr) {
             return nullptr;
@@ -73,21 +73,6 @@ namespace weaponspeedmultFix {
 
     }
 
-    //void hkbHook::Activate(RE::hkbClipGenerator* self, const RE::hkbContext& a_context) {
-    //    if (!self) {
-    //        log::warn("[hkbHook::Activate]: no self");
-    //        return;
-    //    }
-    //    _originalActivate(self, a_context);
-
-    //    const char* name = self->animationName.c_str();
-    //    /*log::info("[hkbClipGenerator::Activate] clip='{}' speed={}", name ? name : "<null>", self->playbackSpeed);*/
-    //    if (IsMCOAttackClip(name)) {
-    //        log::info("[hkbHook::Activate] clip='{}' speed={}", name ? name : "<null>",
-    //                    self->playbackSpeed);
-    //    }   
-    //}
-
     void hkbHook::Update(RE::hkbClipGenerator* self, const RE::hkbContext& a_context, float a_timestep) {
         if (!self) {
             log::warn("[hkbHook::Update] no self");
@@ -95,7 +80,7 @@ namespace weaponspeedmultFix {
         }
 
         const char* raw = self->animationName.c_str();
-       /* if (!raw || (!IsMCOAttackClip(raw) && !IsBFCOAttackClip(raw))) {
+        /*if (!raw || (!IsMCOAttackClip(raw) && !IsBFCOAttackClip(raw))) {
             return _originalUpdate(self, a_context, a_timestep);
         }*/
         if (!raw || !IsTargetClip(raw)) {

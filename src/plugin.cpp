@@ -38,6 +38,7 @@ namespace {
         spdlog::set_default_logger(std::move(loggerPtr));
     }
 }
+
 SKSEPluginLoad(const SKSE::LoadInterface* skse) {
     initialize_log();
     auto* plugin = PluginDeclaration::GetSingleton();

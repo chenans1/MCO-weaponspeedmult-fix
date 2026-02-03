@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 # Set your project name. This will be the name of your SKSE .dll file.
-project(weaponspeedmultFix VERSION 0.0.1 LANGUAGES CXX)
+project(weaponspeedmultFix VERSION 1.0.0 LANGUAGES CXX)
 
 #set(OUTPUT_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/output")
 set(OUTPUT_FOLDER "D:/Skyrim SE MO2/mods/weaponspeedmultFix for MCO")
@@ -34,7 +34,7 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE
 ) 
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/extern/SimpleIni.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/extern
 )
 
 # When your SKSE .dll is compiled, this will automatically copy the .dll into your mods folder.
