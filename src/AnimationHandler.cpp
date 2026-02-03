@@ -9,13 +9,23 @@ using namespace SKSE::stl;
 
 namespace weaponspeedmultFix {
     static bool IsBFCOAttackClip(std::string_view clipPath) noexcept {
-        static constexpr std::array<std::string_view, 5> kPrefixes = {
-            "BFCO_attack", "BFCO_powerattack", "BFCO_SpecialAttack", "BFCO_SpecialAttackPower", "MCO_weaponart"};
         const auto file = utils::basename_view(clipPath);
+        /*static constexpr std::array<std::string_view, 9> kPrefixes = {
+            "BFCO_attack", "BFCO_powerattack", 
+            "BFCO_SpecialAttack", "BFCO_SpecialAttackPower", 
+            "BFCO_RangeAttack", 
+            "BFCO_SprintAttackPower","BFCO_SprintAttack",
+            "BFCO_JumpAttack","BFCO_JumpAttackPower"};
+        
         for (auto p : kPrefixes) {
             if (utils::istarts_with(file, p)) return true;
         }
-        return false;
+        return false;*/
+        if (!utils::istarts_with(file, "BFCO_")) {
+            return false;
+        }
+        return true;
+        
     }
 
     static bool IsMCOAttackClip(std::string_view clipPath) noexcept {
@@ -25,6 +35,20 @@ namespace weaponspeedmultFix {
         const auto file = utils::basename_view(clipPath);
         for (auto p : kPrefixes) {
             if (utils::istarts_with(file, p)) return true;
+        }
+        return false;
+    }
+
+    //handles both either MCO or BFCO
+    static bool IsTargetClip(std::string_view clipPath) noexcept {
+        const auto file = utils::basename_view(clipPath);
+        if (utils::istarts_with(file, "MCO_")) {
+            //return IsMCOAttackClip(file);
+            return true;
+        }
+        if (utils::istarts_with(file, "BFCO_")) {
+            //return IsBFCOAttackClip(file);
+            return true;
         }
         return false;
     }
@@ -49,20 +73,20 @@ namespace weaponspeedmultFix {
 
     }
 
-    void hkbHook::Activate(RE::hkbClipGenerator* self, const RE::hkbContext& a_context) {
-        if (!self) {
-            log::warn("[hkbHook::Activate]: no self");
-            return;
-        }
-        _originalActivate(self, a_context);
+    //void hkbHook::Activate(RE::hkbClipGenerator* self, const RE::hkbContext& a_context) {
+    //    if (!self) {
+    //        log::warn("[hkbHook::Activate]: no self");
+    //        return;
+    //    }
+    //    _originalActivate(self, a_context);
 
-        const char* name = self->animationName.c_str();
-        /*log::info("[hkbClipGenerator::Activate] clip='{}' speed={}", name ? name : "<null>", self->playbackSpeed);*/
-        if (IsMCOAttackClip(name)) {
-            log::info("[hkbHook::Activate] clip='{}' speed={}", name ? name : "<null>",
-                        self->playbackSpeed);
-        }   
-    }
+    //    const char* name = self->animationName.c_str();
+    //    /*log::info("[hkbClipGenerator::Activate] clip='{}' speed={}", name ? name : "<null>", self->playbackSpeed);*/
+    //    if (IsMCOAttackClip(name)) {
+    //        log::info("[hkbHook::Activate] clip='{}' speed={}", name ? name : "<null>",
+    //                    self->playbackSpeed);
+    //    }   
+    //}
 
     void hkbHook::Update(RE::hkbClipGenerator* self, const RE::hkbContext& a_context, float a_timestep) {
         if (!self) {
@@ -71,16 +95,16 @@ namespace weaponspeedmultFix {
         }
 
         const char* raw = self->animationName.c_str();
-        if (!raw || !IsMCOAttackClip(raw)) {
+       /* if (!raw || (!IsMCOAttackClip(raw) && !IsBFCOAttackClip(raw))) {
+            return _originalUpdate(self, a_context, a_timestep);
+        }*/
+        if (!raw || !IsTargetClip(raw)) {
             return _originalUpdate(self, a_context, a_timestep);
         }
         //log::info("[hkbHook::Update] clip='{}' speed={}", raw ? raw : "<null>", self->playbackSpeed);
         auto* graph = GraphFromCharacter(a_context.character);
         if (!graph) {
             log::warn("[hkbHook::Update]: No graph");
-            return _originalUpdate(self, a_context, a_timestep);
-        }
-        if (graph->behaviorGraph != a_context.behavior) {
             return _originalUpdate(self, a_context, a_timestep);
         }
         
@@ -91,11 +115,22 @@ namespace weaponspeedmultFix {
         }
 
         // fetch weapon speed mult actor value
-        const float wsm = utils::normWSM(actor->AsActorValueOwner()->GetActorValue(RE::ActorValue::kWeaponSpeedMult));
+        auto* actorAV = actor->AsActorValueOwner();
+        float wsm = 1.0f;
+        if (actorAV) {
+            wsm = utils::normWSM(actorAV->GetActorValue(RE::ActorValue::kWeaponSpeedMult));
+        } else {
+            log::warn("[hkbHook::Update] no actorAV for '{}'", raw ? raw : "<null>");
+        }
+
+        //float wsm = utils::normWSM(actor->AsActorValueOwner()->GetActorValue(RE::ActorValue::kWeaponSpeedMult));
+        //adapted from maybeAsrak's magic utils, should be the timescale fix? not sure if this is necessary
+        //RE::HandleEntryPoint(RE::PerkEntryPoint::kModPercentBlocked, actor, &wsm, "TimeScale", 3, {});
+
         const float base = self->playbackSpeed;
         self->playbackSpeed = base * wsm;
-        log::info("[hkbHook::Update] clip='{}', base={}, weaponspeedmult={}, updated speed={}",
-            raw ? raw : "<null>", base,  wsm, self->playbackSpeed);
+        /*log::info("[hkbHook::Update] clip='{}', base={}, weaponspeedmult={}, updated speed={}",
+            raw ? raw : "<null>", base,  wsm, self->playbackSpeed);*/
 
         //call original function
         return _originalUpdate(self, a_context, a_timestep);
