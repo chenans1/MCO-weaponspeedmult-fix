@@ -88,6 +88,7 @@ namespace weaponspeedmultFix {
 
         return rightIs1H && leftIs1H;
     }
+
     void hkbHook::Install() { 
         log::info("[hkbHook]: attempting to install hooks");
         REL::Relocation<std::uintptr_t> vtblhkbClipGenerator{RE::VTABLE_hkbClipGenerator[0]};
@@ -128,13 +129,25 @@ namespace weaponspeedmultFix {
         const float base = self->playbackSpeed;
         if (settings::applyWeaponSpeed()) {
             //fetch the value of the graph variable float instead
-            float weaponSpeedMult = 1.0f;
-            if (actor->GetGraphVariableFloat("weaponSpeedMult"sv, weaponSpeedMult)) {
-                const float wsm = utils::normWSM(weaponSpeedMult);
+            float rightWSM = 1.0f;
+            float leftWSM = 1.0f;
+
+            const bool gotRight = actor->GetGraphVariableFloat("weaponSpeedMult"sv, rightWSM);
+            const bool gotLeft = actor->GetGraphVariableFloat("leftWeaponSpeedMult"sv, leftWSM);
+
+            if (gotRight) {
+                float wsm = utils::normWSM(rightWSM);
+                if (settings::avgDualWield() && gotLeft && IsDualWielding(actor)) {
+                    const float rw = utils::normWSM(rightWSM);
+                    const float lw = utils::normWSM(leftWSM);
+
+                    wsm = 0.5f * (rw + lw);
+                }
                 self->playbackSpeed = base * wsm;
                 if (settings::isLogOn()) {
-                    log::info("[hkbHook::Update] clip='{}', base={}, weaponspeedmult(Graph Float)={}, new speed={}",
-                              raw ? raw : "<null>", base, wsm, self->playbackSpeed);
+                    log::info("[hkbHook::Update] clip='{}', base={}, rWSM={}, lWSM={}, finalWSM={}, new={}",
+                              raw ? raw : "<null>", base, utils::normWSM(rightWSM), utils::normWSM(leftWSM), wsm,
+                              self->playbackSpeed);
                 }
             }
         } else {
