@@ -75,7 +75,7 @@ namespace weaponspeedmultFix {
 
     void hkbHook::Update(RE::hkbClipGenerator* self, const RE::hkbContext& a_context, float a_timestep) {
         if (!self) {
-            log::warn("[hkbHook::Update] no self");
+            //log::warn("[hkbHook::Update] no self");
             return _originalUpdate(self, a_context, a_timestep);
         }
 
@@ -101,22 +101,16 @@ namespace weaponspeedmultFix {
 
         // fetch weapon speed mult actor value
         auto* actorAV = actor->AsActorValueOwner();
-        float wsm = 1.0f;
-        if (actorAV) {
-            wsm = utils::normWSM(actorAV->GetActorValue(RE::ActorValue::kWeaponSpeedMult));
-        } else {
+        //float wsm = 1.0f;
+        if (!actorAV) {
             log::warn("[hkbHook::Update] no actorAV for '{}'", raw ? raw : "<null>");
+            return _originalUpdate(self, a_context, a_timestep);
         }
-
-        //float wsm = utils::normWSM(actor->AsActorValueOwner()->GetActorValue(RE::ActorValue::kWeaponSpeedMult));
-        //adapted from maybeAsrak's magic utils, should be the timescale fix? not sure if this is necessary
-        //RE::HandleEntryPoint(RE::PerkEntryPoint::kModPercentBlocked, actor, &wsm, "TimeScale", 3, {});
-
+        const float wsm = utils::normWSM(actorAV->GetActorValue(RE::ActorValue::kWeaponSpeedMult));
         const float base = self->playbackSpeed;
         self->playbackSpeed = base * wsm;
         /*log::info("[hkbHook::Update] clip='{}', base={}, weaponspeedmult={}, updated speed={}",
             raw ? raw : "<null>", base,  wsm, self->playbackSpeed);*/
-
         //call original function
         return _originalUpdate(self, a_context, a_timestep);
     }
