@@ -64,6 +64,30 @@ namespace weaponspeedmultFix {
         return SKSE::stl::adjust_pointer<RE::BShkbAnimationGraph>(chr, -0xC0);
     }
 
+    //check if the actor is dual wielding
+    static bool IsDualWielding(const RE::Actor* actor) {
+        if (!actor) {
+            return false;
+        }
+        const auto* rightForm = actor->GetEquippedObject(false);
+        const auto* leftForm = actor->GetEquippedObject(true);
+
+        const auto* rightWeap = rightForm ? rightForm->As<RE::TESObjectWEAP>() : nullptr;
+        const auto* leftWeap = leftForm ? leftForm->As<RE::TESObjectWEAP>() : nullptr;
+        if (!rightWeap || !leftWeap) {
+            // If left is a shield/spell/empty, leftWeap will be null -> not dual wield
+            return false;
+        }
+
+        const auto rType = rightWeap->GetWeaponType();
+        const auto lType = leftWeap->GetWeaponType();
+
+        const bool rightIs1H = (rType >= RE::WeaponTypes::kOneHandSword && rType <= RE::WeaponTypes::kOneHandMace);
+
+        const bool leftIs1H = (lType >= RE::WeaponTypes::kOneHandSword && lType <= RE::WeaponTypes::kOneHandMace);
+
+        return rightIs1H && leftIs1H;
+    }
     void hkbHook::Install() { 
         log::info("[hkbHook]: attempting to install hooks");
         REL::Relocation<std::uintptr_t> vtblhkbClipGenerator{RE::VTABLE_hkbClipGenerator[0]};
