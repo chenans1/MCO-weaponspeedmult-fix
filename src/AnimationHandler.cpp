@@ -1,6 +1,8 @@
 #include "PCH.h"
 #include "AnimationHandler.h"
 #include "utils.h"
+#include "settings.h"
+
 #include <array>
 
 using namespace SKSE;
@@ -98,19 +100,34 @@ namespace weaponspeedmultFix {
             log::warn("[hkbHook::Update]: No actor");
             return _originalUpdate(self, a_context, a_timestep);
         }
-
-        // fetch weapon speed mult actor value
-        auto* actorAV = actor->AsActorValueOwner();
-        //float wsm = 1.0f;
-        if (!actorAV) {
-            log::warn("[hkbHook::Update] no actorAV for '{}'", raw ? raw : "<null>");
-            return _originalUpdate(self, a_context, a_timestep);
-        }
-        const float wsm = utils::normWSM(actorAV->GetActorValue(RE::ActorValue::kWeaponSpeedMult));
+        // check whether we are using the weapon speed mult or not. if we use weaponspeedmult fetch the graph variable instead
         const float base = self->playbackSpeed;
-        self->playbackSpeed = base * wsm;
-        /*log::info("[hkbHook::Update] clip='{}', base={}, weaponspeedmult={}, updated speed={}",
-            raw ? raw : "<null>", base,  wsm, self->playbackSpeed);*/
+        if (settings::applyWeaponSpeed()) {
+            //fetch the value of the graph variable float instead
+            float weaponSpeedMult = 1.0f;
+            if (actor->GetGraphVariableFloat("weaponSpeedMult"sv, weaponSpeedMult)) {
+                const float wsm = utils::normWSM(weaponSpeedMult);
+                self->playbackSpeed = base * wsm;
+                if (settings::isLogOn()) {
+                    log::info("[hkbHook::Update] clip='{}', base={}, weaponspeedmult(Graph Float)={}, new speed={}",
+                              raw ? raw : "<null>", base, wsm, self->playbackSpeed);
+                }
+            }
+        } else {
+            // fetch weapon speed mult actor value
+            auto* actorAV = actor->AsActorValueOwner();
+            // float wsm = 1.0f;
+            if (!actorAV) {
+                log::warn("[hkbHook::Update] no actorAV for '{}'", raw ? raw : "<null>");
+                return _originalUpdate(self, a_context, a_timestep);
+            }
+            const float wsm = utils::normWSM(actorAV->GetActorValue(RE::ActorValue::kWeaponSpeedMult));
+            self->playbackSpeed = base * wsm;
+            if (settings::isLogOn()) {
+                log::info("[hkbHook::Update] clip='{}', base={}, weaponspeedmult(AV)={}, new speed={}",
+                          raw ? raw : "<null>", base, wsm, self->playbackSpeed);
+            }
+        }
         //call original function
         return _originalUpdate(self, a_context, a_timestep);
     }
