@@ -24,6 +24,8 @@ set(SOURCES
     src/AnimationHandler.cpp
     src/utils.h
     src/utils.cpp
+    src/settings.h
+    src/settings.cpp
 )
 
 add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${SOURCES}) # <--- specifies plugin.cpp

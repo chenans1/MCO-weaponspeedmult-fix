@@ -5,6 +5,7 @@
 #include <spdlog/sinks/msvc_sink.h>
 
 #include "AnimationHandler.h"
+#include "settings.h"
 
 using namespace SKSE;
 using namespace SKSE::log;
@@ -46,6 +47,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse) {
     log::info("{} {} is loading...", plugin->GetName(), version);
     SKSE::Init(skse);
     weaponspeedmultFix::hkbHook::Install();
+    settings::load();
     log::info("{} has finished loading.", plugin->GetName());
     return true;
 }
