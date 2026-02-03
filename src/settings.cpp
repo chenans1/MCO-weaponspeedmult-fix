@@ -12,8 +12,8 @@ static bool ini_bool(CSimpleIniA& ini, const char* section, const char* key, boo
 
 namespace settings {
 
-    static config ini{};
-    config& Get() { return ini; }
+    static config cfg{};
+    config& Get() { return cfg; }
 
     void load() {
         constexpr auto path = "Data/SKSE/Plugins/wsmFix.ini";
@@ -31,6 +31,7 @@ namespace settings {
         auto& c = Get();
         c.enableLog = ini_bool(ini, "general", "enableLog", c.enableLog);
         c.enableWeaponSpeed = ini_bool(ini, "general", "enableWeaponSpeed", c.enableWeaponSpeed);
-        SKSE::log::info("Settings loaded: log={}, applyWeaponSpeed={}");
+        c.avgDW = ini_bool(ini, "general", "averageDualWield", c.avgDW);
+        SKSE::log::info("Settings loaded: log={}, applyWeaponSpeed={}, averageDualWield={}", c.enableLog, c.enableWeaponSpeed, c.avgDW);
     }
 }
