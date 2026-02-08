@@ -30,26 +30,19 @@ namespace weaponspeedmultFix {
     //    
     //}
 
-    //static bool IsMCOAttackClip(std::string_view clipPath) noexcept {
-    //    static constexpr std::array<std::string_view, 5> kPrefixes = {
-    //        "MCO_attack", "MCO_powerattack", "MCO_sprintattack", "MCO_sprintpowerattack", "MCO_weaponart"};
-
-    //    const auto file = utils::basename_view(clipPath);
-    //    for (auto p : kPrefixes) {
-    //        if (utils::istarts_with(file, p)) return true;
-    //    }
-    //    return false;
-    //}
-
     //handles both either MCO or BFCO
     static bool IsTargetClip(std::string_view clipPath) noexcept {
         const auto file = utils::basename_view(clipPath);
+        if (utils::istarts_with(file, "MCO_Dodge"sv)) {
+            return false;
+        }
         if (utils::istarts_with(file, "MCO_")) {
-            //return IsMCOAttackClip(file);
             return true;
         }
+        if (utils::istarts_with(file, "BFCO_Block"sv) || utils::istarts_with(file, "BFCO_Shd"sv)) {
+            return false;
+        }
         if (utils::istarts_with(file, "BFCO_")) {
-            //return IsBFCOAttackClip(file);
             return true;
         }
         return false;
