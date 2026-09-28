@@ -106,6 +106,7 @@ namespace weaponspeedmultFix {
         if (!raw || !IsTargetClip(raw)) {
             return _originalUpdate(self, a_context, a_timestep);
         }
+
         //log::info("[hkbHook::Update] clip='{}' speed={}", raw ? raw : "<null>", self->playbackSpeed);
         auto* graph = GraphFromCharacter(a_context.character);
         if (!graph) {
@@ -113,6 +114,13 @@ namespace weaponspeedmultFix {
             return _originalUpdate(self, a_context, a_timestep);
         }
         
+        const auto* projectName = graph->projectName.c_str();
+
+        if (!((strstr(projectName, "DefaultMale") || strstr(projectName, "DefaultFemale")) && !strstr(projectName, "FirstPerson"))) {
+            //in first person or not human -> return
+            return _originalUpdate(self, a_context, a_timestep);
+        }
+
         auto* actor = graph->holder;
         if (!actor) {
             log::warn("[hkbHook::Update]: No actor");
@@ -158,7 +166,6 @@ namespace weaponspeedmultFix {
                           raw ? raw : "<null>", base, wsm, self->playbackSpeed);
             }
         }
-        //call original function
         return _originalUpdate(self, a_context, a_timestep);
     }
 }
